@@ -27,15 +27,17 @@ def load_ordens(df):
     df = df.merge(especies, left_on='ESPÉCIE', right_index=True).reset_index(drop=True)
     return df
 
-def pieplot(df, path):
+def pieplot(df, path, title=''):
     fig, ax = plt.subplots(figsize=(8,6))
     ax.pie(df)
+    plt.title(title)
     plt.legend(labels=df.index, bbox_to_anchor=(0.9, 0.9), loc="best")
     plt.tight_layout()
     plt.savefig(path)
 
 df = clean_file('src/files/rapinantes_anual.xlsx')
 df['DATA'].replace({'jan':'Jan'}, inplace=True)
+
 meses = df['DATA'].unique()
 df = load_ordens(df)
 porcentagem_animais = df["ESPÉCIE"].value_counts(normalize=True).round(2)
@@ -45,7 +47,7 @@ porcentagem_motivo_entrada = porcentagem_motivo_entrada.unstack(level=-1, fill_v
 g = sns.catplot(kind='bar', x='MOTIVO DE ENTRADA', y='Porcentagem', data=df_plot, col='ESPÉCIE', col_wrap=6, legend=True)
 g.set_xticklabels(rotation=90)
 plt.tight_layout()
-plt.savefig('output/porcentagem_motivo_entrada.png')
+# plt.savefig('output/porcentagem_motivo_entrada.png')
 porcentagem_motivo_entrada['Total'] = porcentagem_animais
 porcentagem_motivo_entrada.to_excel('output/porcentagem_motivo_entrada.xlsx')
 
@@ -65,3 +67,9 @@ porcentagem_ordem_mes.to_excel('output/porcentagem_ordem_mes.xlsx')
 porcentagem_ordem_anual = df['ORDEM'].value_counts(normalize=True)
 pieplot(porcentagem_ordem_anual, 'output/porcentagem_ordem_anual.png')
 porcentagem_ordem_anual.to_excel('output/porcentagem_ordem_anual.xlsx')
+
+porcentagem_ordem_motivo_entrada = calc_percentage(df.groupby('ORDEM'), 'MOTIVO DE ENTRADA')
+porcentagem_ordem_motivo_entrada.unstack(level=-1, fill_value=0).to_excel('output/porcentagem_ordem_motivo_entrada.xlsx')
+
+for ordem in df['ORDEM'].unique():
+    pieplot(porcentagem_ordem_motivo_entrada.loc[ordem], 'output/'+ordem+'.png', ordem)
