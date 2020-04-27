@@ -28,10 +28,10 @@ def load_ordens(df):
     return df
 
 def pieplot(df, path, title=''):
-    fig, ax = plt.subplots(figsize=(8,6))
-    ax.pie(df)
+    _, ax = plt.subplots(figsize=(8,6))
+    ax.pie(df, autopct='%1.1f%%', pctdistance=1.1)
     plt.title(title)
-    plt.legend(labels=df.index, bbox_to_anchor=(0.9, 0.9), loc="best")
+    plt.legend(labels=df.index, bbox_to_anchor=(0.9, 1.0), loc="best")
     plt.tight_layout()
     plt.savefig(path)
 
@@ -40,7 +40,7 @@ df['DATA'].replace({'jan':'Jan'}, inplace=True)
 
 meses = df['DATA'].unique()
 df = load_ordens(df)
-porcentagem_animais = df["ESPÉCIE"].value_counts(normalize=True).round(2)
+porcentagem_animais = df["ESPÉCIE"].value_counts(normalize=True).round(4)
 porcentagem_motivo_entrada = calc_percentage(df.groupby(['ESPÉCIE']), 'MOTIVO DE ENTRADA')
 df_plot = porcentagem_motivo_entrada.reset_index()
 porcentagem_motivo_entrada = porcentagem_motivo_entrada.unstack(level=-1, fill_value=0)
