@@ -1,8 +1,6 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import stats.utils as util
 
 def calc_percentage(df, column, decimals=2):
     """ Returns a series with the percentages of a column"""
@@ -25,6 +23,7 @@ def load_ordens(df):
             lst.append((nome, ordem))
         especies = pd.DataFrame(lst).set_index(0)[1].rename('ORDEM')
     df = df.merge(especies, left_on='ESPÉCIE', right_index=True).reset_index(drop=True)
+    df.to_excel('output/full_table.xlsx')
     return df
 
 def pieplot(df, path, title=''):
@@ -38,16 +37,18 @@ def pieplot(df, path, title=''):
 df = clean_file('src/files/rapinantes_anual.xlsx')
 df['DATA'].replace({'jan':'Jan'}, inplace=True)
 
+pieplot(df['ESPÉCIE'].value_counts(normalize=True).round(4),'output/numero_especies_anual.png')
+
 meses = df['DATA'].unique()
 df = load_ordens(df)
 porcentagem_animais = df["ESPÉCIE"].value_counts(normalize=True).round(4)
-porcentagem_motivo_entrada = calc_percentage(df.groupby(['ESPÉCIE']), 'MOTIVO DE ENTRADA')
+porcentagem_motivo_entrada = calc_percentage(df.groupby(['ESPÉCIE']), 'MOTIVO DE ENTRADA', 4)
 df_plot = porcentagem_motivo_entrada.reset_index()
 porcentagem_motivo_entrada = porcentagem_motivo_entrada.unstack(level=-1, fill_value=0)
 g = sns.catplot(kind='bar', x='MOTIVO DE ENTRADA', y='Porcentagem', data=df_plot, col='ESPÉCIE', col_wrap=6, legend=True)
 g.set_xticklabels(rotation=90)
 plt.tight_layout()
-# plt.savefig('output/porcentagem_motivo_entrada.png')
+plt.savefig('output/porcentagem_motivo_entrada.png')
 porcentagem_motivo_entrada['Total'] = porcentagem_animais
 porcentagem_motivo_entrada.to_excel('output/porcentagem_motivo_entrada.xlsx')
 
@@ -55,7 +56,7 @@ porcentagem_traumas = df['MOTIVO DE ENTRADA'].value_counts(normalize=True).round
 pieplot(porcentagem_traumas, 'output/porcentagem_traumas.png')
 porcentagem_traumas.to_excel('output/porcentagem_traumas.xlsx')
 
-porcentagem_ordem_mes = calc_percentage(df.groupby('DATA'), 'ORDEM').reindex(meses, level=0)
+porcentagem_ordem_mes = calc_percentage(df.groupby('DATA'), 'ORDEM', 4).reindex(meses, level=0)
 df_plot = porcentagem_ordem_mes.reset_index()
 porcentagem_ordem_mes = porcentagem_ordem_mes.unstack(level=-1, fill_value=0)
 g = sns.catplot(kind='bar', x='ORDEM', y='Porcentagem', data=df_plot, col='DATA', col_wrap=6, legend=False)
@@ -68,7 +69,7 @@ porcentagem_ordem_anual = df['ORDEM'].value_counts(normalize=True)
 pieplot(porcentagem_ordem_anual, 'output/porcentagem_ordem_anual.png')
 porcentagem_ordem_anual.to_excel('output/porcentagem_ordem_anual.xlsx')
 
-porcentagem_ordem_motivo_entrada = calc_percentage(df.groupby('ORDEM'), 'MOTIVO DE ENTRADA')
+porcentagem_ordem_motivo_entrada = calc_percentage(df.groupby('ORDEM'), 'MOTIVO DE ENTRADA', 4)
 porcentagem_ordem_motivo_entrada.unstack(level=-1, fill_value=0).to_excel('output/porcentagem_ordem_motivo_entrada.xlsx')
 
 for ordem in df['ORDEM'].unique():
